@@ -45,7 +45,9 @@ const PMCommandCenter = () => {
     competitors: ['', '', ''],
     isSetupComplete: false
   });
-
+  const [competitorData, setCompetitorData] = useState([]);
+  const [isLoadingCompetitors, setIsLoadingCompetitors] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [documentationInput, setDocumentationInput] = useState('');
   const [generatedDoc, setGeneratedDoc] = useState('');
   const [requirementsInput, setRequirementsInput] = useState('');
