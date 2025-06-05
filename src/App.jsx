@@ -34,6 +34,14 @@ const PMCommandCenter = () => {
       churn: { value: "2.1%", change: "-0.4%" }
     }
   });
+  
+  const [competitorSetup, setCompetitorSetup] = useState({
+    organization: '',
+    industry: '',
+    focusArea: '',
+    competitors: ['', '', ''],
+    isSetupComplete: false
+  });
 
   const [documentationInput, setDocumentationInput] = useState('');
   const [generatedDoc, setGeneratedDoc] = useState('');
