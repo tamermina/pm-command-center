@@ -570,73 +570,116 @@ Reach out to [contact] for support or feedback.`
               ) : (
                 /* Competitor Updates Display - Show after setup */
                 <div className="space-y-4">
-                  {/* Setup Summary */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-green-900 text-sm">
-                          Monitoring: {competitorSetup.organization}
-                        </h4>
-                        <p className="text-xs text-green-700">
-                          {competitorSetup.industry} • {competitorSetup.focusArea}
-                        </p>
-                        <p className="text-xs text-green-600 mt-1">
-                          Tracking {competitorSetup.competitors.filter(c => c.trim()).length} competitors
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setCompetitorSetup(prev => ({
-                          ...prev,
-                          isSetupComplete: false
-                        }))}
-                        className="text-green-600 hover:text-green-700 text-xs"
-                      >
-                        Edit Setup
-                      </button>
-                    </div>
-                  </div>
+  {/* Setup Summary */}
+  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+    <div className="flex items-center justify-between">
+      <div>
+        <h4 className="font-medium text-green-900 text-sm">
+          Monitoring: {competitorSetup.organization}
+        </h4>
+        <p className="text-xs text-green-700">
+          {competitorSetup.industry} • {competitorSetup.focusArea}
+        </p>
+        <p className="text-xs text-green-600 mt-1">
+          Tracking {competitorSetup.competitors.filter(c => c.trim()).length} competitors
+          {lastUpdated && (
+            <span className="ml-2">• Last updated: {lastUpdated.toLocaleTimeString()}</span>
+          )}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={fetchCompetitorData}
+          disabled={isLoadingCompetitors}
+          className="text-green-600 hover:text-green-700 text-xs px-2 py-1 border border-green-300 rounded"
+        >
+          {isLoadingCompetitors ? 'Updating...' : 'Refresh'}
+        </button>
+        <button
+          onClick={() => setCompetitorSetup(prev => ({
+            ...prev,
+            isSetupComplete: false
+          }))}
+          className="text-green-600 hover:text-green-700 text-xs"
+        >
+          Edit Setup
+        </button>
+      </div>
+    </div>
+  </div>
 
-                  {/* Mock Competitor Updates - These would come from real data */}
-                  <div className="space-y-3">
-                    {competitorSetup.competitors.filter(c => c.trim()).slice(0, 3).map((competitor, index) => {
-                      const mockUpdates = [
-                        { update: "Launched new dashboard feature with real-time analytics", impact: "high", time: "2h ago" },
-                        { update: "Updated pricing model - introduced new Pro tier", impact: "medium", time: "1d ago" },
-                        { update: "Released mobile app version 3.2 with improved UX", impact: "medium", time: "3d ago" },
-                        { update: "Announced partnership with major enterprise client", impact: "high", time: "5d ago" },
-                        { update: "Published new API documentation and developer tools", impact: "low", time: "1w ago" }
-                      ];
-                      
-                      const update = mockUpdates[index] || mockUpdates[0];
-                      
-                      return (
-                        <div key={index} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-medium text-gray-900 text-xs sm:text-sm">{competitor}</h4>
-                                <span className="text-xs text-gray-400">•</span>
-                                <span className="text-xs text-gray-500">{update.time}</span>
-                              </div>
-                              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{update.update}</p>
-                            </div>
-                            <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-                              update.impact === 'high' ? 'bg-red-100 text-red-700' : 
-                              update.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {update.impact}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+  {/* Loading State */}
+  {isLoadingCompetitors && (
+    <div className="flex items-center justify-center py-8">
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+      <span className="ml-2 text-sm text-gray-600">Fetching latest updates...</span>
+    </div>
+  )}
 
-                  <button className="w-full mt-4 text-red-600 text-xs sm:text-sm font-medium hover:text-red-700 flex items-center justify-center gap-1">
-                    View Full Analysis <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
+  {/* Real Competitor Updates */}
+  {!isLoadingCompetitors && competitorData.length > 0 && (
+    <div className="space-y-3">
+      {competitorData.map((competitorInfo, compIndex) => 
+        competitorInfo.updates.map((update, updateIndex) => (
+          <div key={`${compIndex}-${updateIndex}`} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-medium text-gray-900 text-xs sm:text-sm">{competitorInfo.competitor}</h4>
+                  <span className="text-xs text-gray-400">•</span>
+                  <span className="text-xs text-gray-500">{update.time}</span>
+                  {update.source && (
+                    <>
+                      <span className="text-xs text-gray-400">•</span>
+                      <span className="text-xs text-gray-500">{update.source}</span>
+                    </>
+                  )}
                 </div>
+                <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{update.update}</p>
+                {update.url && (
+                  <a 
+                    href={update.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-700 mt-1 inline-block"
+                  >
+                    Read more →
+                  </a>
+                )}
+              </div>
+              <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                update.impact === 'high' ? 'bg-red-100 text-red-700' : 
+                update.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+                'bg-gray-100 text-gray-700'
+              }`}>
+                {update.impact}
+              </span>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )}
+
+  {/* Empty State */}
+  {!isLoadingCompetitors && competitorData.length === 0 && (
+    <div className="text-center py-6">
+      <Users className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+      <p className="text-sm text-gray-500">No recent updates found</p>
+      <button 
+        onClick={fetchCompetitorData}
+        className="text-red-600 hover:text-red-700 text-sm mt-2"
+      >
+        Try refreshing
+      </button>
+    </div>
+  )}
+
+  <button className="w-full mt-4 text-red-600 text-xs sm:text-sm font-medium hover:text-red-700 flex items-center justify-center gap-1">
+    View Full Analysis <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+  </button>
+</div>
+                
               )}
             </div>
           </div>
