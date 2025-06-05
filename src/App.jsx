@@ -141,6 +141,51 @@ ${documentationInput}
     setGeneratedRequirements(structured);
   };
 
+  // Add this function to fetch real competitor data
+  const fetchCompetitorData = async () => {
+    if (!competitorSetup.isSetupComplete) return;
+    
+    setIsLoadingCompetitors(true);
+    try {
+      // Get competitor updates
+      const competitors = competitorSetup.competitors.filter(c => c.trim());
+      const competitorUpdates = await competitorService.getCompetitorNews(
+        competitors, 
+        competitorSetup.industry, 
+        competitorSetup.focusArea
+      );
+      
+      // Get industry news
+      const industryNews = await competitorService.getIndustryNews(
+        competitorSetup.industry, 
+        competitorSetup.focusArea
+      );
+      
+      setCompetitorData(competitorUpdates);
+      setBriefingData(prev => ({
+        ...prev,
+        marketNews: industryNews
+      }));
+      
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching competitor data:', error);
+    } finally {
+      setIsLoadingCompetitors(false);
+    }
+  };
+
+// Add useEffect to auto-fetch data when setup is completed
+useEffect(() => {
+  if (competitorSetup.isSetupComplete) {
+    fetchCompetitorData();
+    
+    // Set up auto-refresh every 30 minutes
+    const interval = setInterval(fetchCompetitorData, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }
+}, [competitorSetup.isSetupComplete]);
+
   const communicationTemplates = {
     'Executive Update': `# Weekly Executive Summary
 
