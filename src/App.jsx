@@ -24,7 +24,7 @@ const [competitorSetup, setCompetitorSetup] = useState({
     focusArea: '',
     competitors: ['', '', ''],
     isSetupComplete: false
-  });
+});
 const PMCommandCenter = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
