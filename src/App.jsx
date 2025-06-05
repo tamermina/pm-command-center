@@ -385,32 +385,258 @@ Reach out to [contact] for support or feedback.`
             </div>
 
             {/* Competitor Updates */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
-                Competitor Intelligence
-              </h3>
-              <div className="space-y-3">
-                {briefingData.competitorUpdates.map((update, index) => (
-                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 text-xs sm:text-sm">{update.company}</h4>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{update.update}</p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-                        update.impact === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {update.impact}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full mt-4 text-indigo-600 text-xs sm:text-sm font-medium hover:text-indigo-700 flex items-center justify-center gap-1">
-                View Full Analysis <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-              </button>
+            {/* Competitor Updates */}
+<div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+    Competitor Intelligence
+  </h3>
+  
+  {/* Setup Form - Show if not completed */}
+  {!competitorSetup.isSetupComplete ? (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <Users className="w-4 h-4 text-blue-600" />
+          </div>
+          <div>
+            <h4 className="font-medium text-blue-900 text-sm">Quick Setup Required</h4>
+            <p className="text-xs text-blue-700 mt-1">
+              Help us provide relevant competitor insights by sharing some context about your business.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Organization */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Your Organization/Company
+        </label>
+        <input
+          type="text"
+          value={competitorSetup.organization}
+          onChange={(e) => setCompetitorSetup(prev => ({
+            ...prev,
+            organization: e.target.value
+          }))}
+          placeholder="e.g., Acme Bank, StartupXYZ, My Product Team"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+        />
+      </div>
+
+      {/* Industry */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Industry
+        </label>
+        <select
+          value={competitorSetup.industry}
+          onChange={(e) => setCompetitorSetup(prev => ({
+            ...prev,
+            industry: e.target.value
+          }))}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+        >
+          <option value="">Select your industry...</option>
+          <option value="fintech">Fintech & Financial Services</option>
+          <option value="healthcare">Healthcare & MedTech</option>
+          <option value="ecommerce">E-commerce & Retail</option>
+          <option value="saas">SaaS & Software</option>
+          <option value="edtech">Education & EdTech</option>
+          <option value="gaming">Gaming & Entertainment</option>
+          <option value="travel">Travel & Hospitality</option>
+          <option value="logistics">Logistics & Supply Chain</option>
+          <option value="real-estate">Real Estate & PropTech</option>
+          <option value="foodtech">Food & Beverage Tech</option>
+          <option value="automotive">Automotive & Transportation</option>
+          <option value="energy">Energy & CleanTech</option>
+          <option value="media">Media & Content</option>
+          <option value="social">Social & Community</option>
+          <option value="productivity">Productivity & Workplace</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      {/* Focus Area */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Primary Focus Area
+        </label>
+        <input
+          type="text"
+          value={competitorSetup.focusArea}
+          onChange={(e) => setCompetitorSetup(prev => ({
+            ...prev,
+            focusArea: e.target.value
+          }))}
+          placeholder="e.g., Mobile banking apps, B2B analytics dashboard, Consumer marketplace"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Be specific about your product area or market segment
+        </p>
+      </div>
+
+      {/* Competitors */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Key Competitors (Minimum 3)
+        </label>
+        <div className="space-y-2">
+          {competitorSetup.competitors.map((competitor, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 w-6">{index + 1}.</span>
+              <input
+                type="text"
+                value={competitor}
+                onChange={(e) => {
+                  const newCompetitors = [...competitorSetup.competitors];
+                  newCompetitors[index] = e.target.value;
+                  setCompetitorSetup(prev => ({
+                    ...prev,
+                    competitors: newCompetitors
+                  }));
+                }}
+                placeholder={index === 0 ? "e.g., Chase Mobile, Stripe Dashboard, Amazon" : "Competitor name..."}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+              />
+              {index >= 3 && (
+                <button
+                  onClick={() => {
+                    const newCompetitors = competitorSetup.competitors.filter((_, i) => i !== index);
+                    setCompetitorSetup(prev => ({
+                      ...prev,
+                      competitors: newCompetitors
+                    }));
+                  }}
+                  className="text-red-500 hover:text-red-700 p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
+          ))}
+          
+          {competitorSetup.competitors.length < 8 && (
+            <button
+              onClick={() => setCompetitorSetup(prev => ({
+                ...prev,
+                competitors: [...prev.competitors, '']
+              }))}
+              className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 mt-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add another competitor
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Setup Button */}
+      <button
+        onClick={() => {
+          // Validate required fields
+          const isValid = competitorSetup.organization.trim() && 
+                         competitorSetup.industry && 
+                         competitorSetup.focusArea.trim() && 
+                         competitorSetup.competitors.filter(c => c.trim()).length >= 3;
+          
+          if (isValid) {
+            setCompetitorSetup(prev => ({
+              ...prev,
+              isSetupComplete: true
+            }));
+            
+            // Here you would typically save to backend/localStorage
+            console.log('Competitor setup completed:', competitorSetup);
+          } else {
+            alert('Please fill in all required fields and add at least 3 competitors.');
+          }
+        }}
+        disabled={!competitorSetup.organization.trim() || 
+                 !competitorSetup.industry || 
+                 !competitorSetup.focusArea.trim() || 
+                 competitorSetup.competitors.filter(c => c.trim()).length < 3}
+        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm font-medium"
+      >
+        <Target className="w-4 h-4" />
+        Start Competitor Monitoring
+      </button>
+    </div>
+  ) : (
+    /* Competitor Updates Display - Show after setup */
+    <div className="space-y-4">
+      {/* Setup Summary */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-medium text-green-900 text-sm">
+              Monitoring: {competitorSetup.organization}
+            </h4>
+            <p className="text-xs text-green-700">
+              {competitorSetup.industry} • {competitorSetup.focusArea}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              Tracking {competitorSetup.competitors.filter(c => c.trim()).length} competitors
+            </p>
+          </div>
+          <button
+            onClick={() => setCompetitorSetup(prev => ({
+              ...prev,
+              isSetupComplete: false
+            }))}
+            className="text-green-600 hover:text-green-700 text-xs"
+          >
+            Edit Setup
+          </button>
+        </div>
+      </div>
+
+      {/* Mock Competitor Updates - These would come from real data */}
+      <div className="space-y-3">
+        {competitorSetup.competitors.filter(c => c.trim()).slice(0, 3).map((competitor, index) => {
+          const mockUpdates = [
+            { update: "Launched new dashboard feature with real-time analytics", impact: "high", time: "2h ago" },
+            { update: "Updated pricing model - introduced new Pro tier", impact: "medium", time: "1d ago" },
+            { update: "Released mobile app version 3.2 with improved UX", impact: "medium", time: "3d ago" },
+            { update: "Announced partnership with major enterprise client", impact: "high", time: "5d ago" },
+            { update: "Published new API documentation and developer tools", impact: "low", time: "1w ago" }
+          ];
+          
+          const update = mockUpdates[index] || mockUpdates[0];
+          
+          return (
+            <div key={index} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-gray-900 text-xs sm:text-sm">{competitor}</h4>
+                    <span className="text-xs text-gray-400">•</span>
+                    <span className="text-xs text-gray-500">{update.time}</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{update.update}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                  update.impact === 'high' ? 'bg-red-100 text-red-700' : 
+                  update.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {update.impact}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button className="w-full mt-4 text-red-600 text-xs sm:text-sm font-medium hover:text-red-700 flex items-center justify-center gap-1">
+        View Full Analysis <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+      </button>
+    </div>
+  )}
+</div>
           </div>
         )}
 
