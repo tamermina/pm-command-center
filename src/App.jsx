@@ -569,74 +569,7 @@ Reach out to [contact] for support or feedback.`
                 </div>
               ) : (
                 /* Competitor Updates Display - Show after setup */
-                <div className="space-y-4">
-                  {/* Setup Summary */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-green-900 text-sm">
-                          Monitoring: {competitorSetup.organization}
-                        </h4>
-                        <p className="text-xs text-green-700">
-                          {competitorSetup.industry} • {competitorSetup.focusArea}
-                        </p>
-                        <p className="text-xs text-green-600 mt-1">
-                          Tracking {competitorSetup.competitors.filter(c => c.trim()).length} competitors
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setCompetitorSetup(prev => ({
-                          ...prev,
-                          isSetupComplete: false
-                        }))}
-                        className="text-green-600 hover:text-green-700 text-xs"
-                      >
-                        Edit Setup
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mock Competitor Updates - These would come from real data */}
-                  <div className="space-y-3">
-                    {competitorSetup.competitors.filter(c => c.trim()).slice(0, 3).map((competitor, index) => {
-                      const mockUpdates = [
-                        { update: "Launched new dashboard feature with real-time analytics", impact: "high", time: "2h ago" },
-                        { update: "Updated pricing model - introduced new Pro tier", impact: "medium", time: "1d ago" },
-                        { update: "Released mobile app version 3.2 with improved UX", impact: "medium", time: "3d ago" },
-                        { update: "Announced partnership with major enterprise client", impact: "high", time: "5d ago" },
-                        { update: "Published new API documentation and developer tools", impact: "low", time: "1w ago" }
-                      ];
-                      
-                      const update = mockUpdates[index] || mockUpdates[0];
-                      
-                      return (
-                        <div key={index} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-medium text-gray-900 text-xs sm:text-sm">{competitor}</h4>
-                                <span className="text-xs text-gray-400">•</span>
-                                <span className="text-xs text-gray-500">{update.time}</span>
-                              </div>
-                              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{update.update}</p>
-                            </div>
-                            <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
-                              update.impact === 'high' ? 'bg-red-100 text-red-700' : 
-                              update.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {update.impact}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <button className="w-full mt-4 text-red-600 text-xs sm:text-sm font-medium hover:text-red-700 flex items-center justify-center gap-1">
-                    View Full Analysis <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                  </button>
-                </div>
+                
               )}
             </div>
           </div>
