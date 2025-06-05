@@ -16,6 +16,9 @@ import {
   Star
 } from 'lucide-react';
 
+// Add this import at the top of your App.jsx
+import competitorService from './services/competitorService';
+
 const PMCommandCenter = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [briefingData, setBriefingData] = useState({
