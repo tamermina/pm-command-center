@@ -1,13 +1,26 @@
 // src/services/competitorService.js
-
 class CompetitorService {
   constructor() {
-    // You'll need to get API keys for these services
-    this.newsAPIKey = process.env.REACT_APP_NEWS_API_KEY;
-    this.serpAPIKey = process.env.REACT_APP_SERP_API_KEY;
+    // Using free CORS proxy services
+    this.corsProxies = [
+      'https://api.allorigins.win/raw?url=',
+      'https://cors-anywhere.herokuapp.com/',
+      'https://thingproxy.freeboard.io/fetch/'
+    ];
+    this.currentProxyIndex = 0;
   }
 
-  // Get news mentions for competitors
+  // Get current CORS proxy
+  getCurrentProxy() {
+    return this.corsProxies[this.currentProxyIndex];
+  }
+
+  // Try next proxy if current one fails
+  switchProxy() {
+    this.currentProxyIndex = (this.currentProxyIndex + 1) % this.corsProxies.length;
+  }
+
+  // Get news mentions for competitors using Google News RSS
   async getCompetitorNews(competitors, industry, focusArea) {
     const results = [];
     
@@ -15,22 +28,17 @@ class CompetitorService {
       if (!competitor.trim()) continue;
       
       try {
-        // Option 1: NewsAPI (requires API key)
-        const newsData = await this.fetchFromNewsAPI(competitor, industry, focusArea);
-        
-        // Option 2: Fallback to Google News RSS (free)
-        const rssData = await this.fetchFromGoogleNewsRSS(competitor, industry);
-        
+        const updates = await this.fetchCompetitorUpdates(competitor, industry, focusArea);
         results.push({
           competitor: competitor,
-          updates: [...newsData, ...rssData].slice(0, 3) // Top 3 updates per competitor
+          updates: updates.slice(0, 2) // Top 2 updates per competitor
         });
       } catch (error) {
         console.error(`Error fetching data for ${competitor}:`, error);
-        // Fallback to mock data if API fails
+        // Fallback to enhanced mock data
         results.push({
           competitor: competitor,
-          updates: this.getMockUpdates(competitor)
+          updates: this.getEnhancedMockUpdates(competitor, industry, focusArea)
         });
       }
     }
@@ -38,140 +46,277 @@ class CompetitorService {
     return results;
   }
 
-  // NewsAPI integration (paid service but very reliable)
-  async fetchFromNewsAPI(competitor, industry, focusArea) {
-    if (!this.newsAPIKey) return [];
+  // Fetch competitor updates from Google News RSS
+  async fetchCompetitorUpdates(competitor, industry, focusArea) {
+    // Create smart search query
+    const searchTerms = [
+      `"${competitor}"`,
+      industry,
+      focusArea
+    ].filter(Boolean);
     
-    const query = `"${competitor}" AND (${industry} OR ${focusArea})`;
-    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=5&apiKey=${this.newsAPIKey}`;
-    
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      return data.articles?.map(article => ({
-        update: article.title,
-        impact: this.calculateImpact(article.title, article.description),
-        time: this.formatTime(article.publishedAt),
-        source: article.source.name,
-        url: article.url
-      })) || [];
-    } catch (error) {
-      console.error('NewsAPI error:', error);
-      return [];
-    }
-  }
-
-  // Google News RSS (free but limited)
-  async fetchFromGoogleNewsRSS(competitor, industry) {
-    const query = `"${competitor}" ${industry}`;
+    const query = searchTerms.join(' ');
     const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
     
+    let attempts = 0;
+    const maxAttempts = this.corsProxies.length;
+    
+    while (attempts < maxAttempts) {
+      try {
+        const proxyUrl = this.getCurrentProxy() + encodeURIComponent(rssUrl);
+        console.log(`Fetching news for ${competitor} via proxy ${attempts + 1}`);
+        
+        const response = await fetch(proxyUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/rss+xml, application/xml, text/xml',
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const xmlText = await response.text();
+        const updates = this.parseGoogleNewsRSS(xmlText, competitor);
+        
+        if (updates.length > 0) {
+          return updates;
+        } else {
+          throw new Error('No updates found in RSS feed');
+        }
+        
+      } catch (error) {
+        console.warn(`Proxy ${attempts + 1} failed for ${competitor}:`, error.message);
+        this.switchProxy();
+        attempts++;
+      }
+    }
+    
+    // All proxies failed, return enhanced mock data
+    console.log(`All proxies failed for ${competitor}, using enhanced mock data`);
+    return this.getEnhancedMockUpdates(competitor, industry, focusArea);
+  }
+
+  // Parse Google News RSS XML
+  parseGoogleNewsRSS(xmlText, competitor) {
     try {
-      // Note: You'll need a CORS proxy or server-side endpoint for this
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
-      const response = await fetch(proxyUrl);
-      const xmlText = await response.text();
-      
-      // Parse RSS XML
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      
+      // Check for parsing errors
+      const parseError = xmlDoc.querySelector('parsererror');
+      if (parseError) {
+        throw new Error('XML parsing failed');
+      }
+      
       const items = xmlDoc.querySelectorAll('item');
       
-      return Array.from(items).slice(0, 3).map(item => ({
-        update: item.querySelector('title')?.textContent || '',
-        impact: this.calculateImpact(item.querySelector('title')?.textContent || ''),
-        time: this.formatTime(item.querySelector('pubDate')?.textContent || ''),
-        source: 'Google News',
-        url: item.querySelector('link')?.textContent || ''
-      }));
+      return Array.from(items).slice(0, 5).map(item => {
+        const title = item.querySelector('title')?.textContent || '';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+        const link = item.querySelector('link')?.textContent || '';
+        const description = item.querySelector('description')?.textContent || '';
+        
+        return {
+          update: this.cleanTitle(title),
+          impact: this.calculateImpact(title, description),
+          time: this.formatTime(pubDate),
+          source: this.extractSource(title) || 'Google News',
+          url: link
+        };
+      }).filter(update => update.update.length > 0);
+      
     } catch (error) {
-      console.error('RSS fetch error:', error);
+      console.error('RSS parsing error:', error);
       return [];
     }
   }
 
-  // Calculate impact based on keywords
+  // Clean up Google News titles (they often include source in title)
+  cleanTitle(title) {
+    // Remove source attribution like "- TechCrunch" from end
+    return title.replace(/\s*-\s*[^-]+$/, '').trim();
+  }
+
+  // Extract source from title if present
+  extractSource(title) {
+    const match = title.match(/\s*-\s*([^-]+)$/);
+    return match ? match[1].trim() : null;
+  }
+
+  // Calculate impact based on keywords and context
   calculateImpact(title, description = '') {
     const text = (title + ' ' + description).toLowerCase();
     
     const highImpactKeywords = [
-      'launch', 'release', 'partnership', 'acquisition', 'funding',
-      'breakthrough', 'major', 'significant', 'revolutionary', 'announces'
+      'launch', 'launches', 'release', 'releases', 'unveil', 'announces',
+      'partnership', 'acquisition', 'merger', 'funding', 'investment',
+      'breakthrough', 'revolutionary', 'major update', 'significant',
+      'ipo', 'goes public', 'raises', 'million', 'billion'
     ];
     
     const mediumImpactKeywords = [
-      'update', 'upgrade', 'feature', 'improvement', 'expansion',
-      'pricing', 'plan', 'strategy', 'investment'
+      'update', 'updates', 'upgrade', 'feature', 'improvement', 'expansion',
+      'pricing', 'plan', 'strategy', 'hire', 'appointment', 'partnership',
+      'integration', 'beta', 'testing', 'pilot'
+    ];
+    
+    const lowImpactKeywords = [
+      'blog', 'post', 'article', 'interview', 'opinion', 'analysis',
+      'review', 'tutorial', 'guide', 'tips', 'tricks'
     ];
     
     if (highImpactKeywords.some(keyword => text.includes(keyword))) {
       return 'high';
     } else if (mediumImpactKeywords.some(keyword => text.includes(keyword))) {
       return 'medium';
+    } else if (lowImpactKeywords.some(keyword => text.includes(keyword))) {
+      return 'low';
     }
     
-    return 'low';
+    return 'medium'; // Default to medium if unclear
   }
 
   // Format time to relative format
   formatTime(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+    if (!dateString) return 'Recently';
     
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 48) return '1d ago';
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-    return `${Math.floor(diffInHours / 168)}w ago`;
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+      
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      if (diffInHours < 24) return `${diffInHours}h ago`;
+      
+      const diffInDays = Math.floor(diffInHours / 24);
+      if (diffInDays < 7) return `${diffInDays}d ago`;
+      
+      const diffInWeeks = Math.floor(diffInDays / 7);
+      return `${diffInWeeks}w ago`;
+    } catch (error) {
+      return 'Recently';
+    }
   }
 
-  // Mock data fallback
-  getMockUpdates(competitor) {
-    const mockUpdates = [
-      { update: "Launched new AI-powered analytics dashboard", impact: "high", time: "2h ago" },
-      { update: "Updated pricing strategy with new enterprise tier", impact: "medium", time: "1d ago" },
-      { update: "Released mobile app version 3.2 with enhanced UX", impact: "medium", time: "3d ago" },
-      { update: "Announced strategic partnership with tech giant", impact: "high", time: "5d ago" },
-      { update: "Published new API documentation for developers", impact: "low", time: "1w ago" }
+  // Enhanced mock data based on industry and focus area
+  getEnhancedMockUpdates(competitor, industry, focusArea) {
+    const industrySpecificUpdates = {
+      'fintech': [
+        'Launched new mobile payment feature with enhanced security',
+        'Announced partnership with major bank for digital wallet integration',
+        'Released API for third-party financial service integrations'
+      ],
+      'healthcare': [
+        'Unveiled AI-powered diagnostic tool for early disease detection',
+        'Received FDA approval for new telemedicine platform',
+        'Integrated with major hospital systems for patient data sharing'
+      ],
+      'ecommerce': [
+        'Introduced AR try-before-you-buy feature for mobile app',
+        'Launched same-day delivery service in 50 new cities',
+        'Announced sustainability initiative for carbon-neutral shipping'
+      ],
+      'saas': [
+        'Released major platform update with enhanced analytics dashboard',
+        'Introduced new enterprise security features and compliance tools',
+        'Launched marketplace for third-party integrations and plugins'
+      ]
+    };
+
+    const focusAreaUpdates = {
+      'mobile': ['mobile app update', 'iOS release', 'Android feature'],
+      'analytics': ['dashboard enhancement', 'reporting tool', 'data visualization'],
+      'security': ['security update', 'compliance certification', 'privacy feature'],
+      'ai': ['AI integration', 'machine learning', 'automated feature']
+    };
+
+    const baseUpdates = industrySpecificUpdates[industry] || [
+      'Announced major product update with new features',
+      'Secured significant funding round for expansion',
+      'Launched strategic partnership with industry leader'
     ];
-    
-    // Return random selection for this competitor
-    return mockUpdates.slice(0, 2).map(update => ({
-      ...update,
-      update: update.update.replace('Launched', `${competitor} launched`)
+
+    // Add focus area context
+    const enhancedUpdates = baseUpdates.map(update => {
+      const focusKeywords = Object.keys(focusAreaUpdates).find(key => 
+        focusArea.toLowerCase().includes(key)
+      );
+      
+      if (focusKeywords) {
+        const focusUpdate = focusAreaUpdates[focusKeywords][0];
+        return update.replace('new features', `new ${focusUpdate}`);
+      }
+      
+      return update;
+    });
+
+    return enhancedUpdates.slice(0, 2).map((update, index) => ({
+      update: `${competitor} ${update.toLowerCase()}`,
+      impact: index === 0 ? 'high' : 'medium',
+      time: index === 0 ? '2h ago' : '1d ago',
+      source: 'Industry News',
+      url: '#'
     }));
   }
 
-  // Industry-specific news
+  // Get industry-specific news
   async getIndustryNews(industry, focusArea) {
-    const query = `${industry} ${focusArea} trends news`;
+    const searchQuery = `${industry} ${focusArea} trends 2025`;
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchQuery)}&hl=en-US&gl=US&ceid=US:en`;
     
     try {
-      if (this.newsAPIKey) {
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=10&apiKey=${this.newsAPIKey}`;
-        const response = await fetch(url);
-        const data = await response.json();
+      const proxyUrl = this.getCurrentProxy() + encodeURIComponent(rssUrl);
+      const response = await fetch(proxyUrl);
+      
+      if (response.ok) {
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
         
-        return data.articles?.slice(0, 5).map(article => ({
-          title: article.title,
-          source: article.source.name,
-          impact: this.calculateImpact(article.title, article.description),
-          url: article.url,
-          publishedAt: article.publishedAt
-        })) || [];
+        return Array.from(items).slice(0, 3).map(item => ({
+          title: this.cleanTitle(item.querySelector('title')?.textContent || ''),
+          source: this.extractSource(item.querySelector('title')?.textContent || '') || 'Industry News',
+          impact: this.calculateImpact(item.querySelector('title')?.textContent || ''),
+          url: item.querySelector('link')?.textContent || '#'
+        }));
       }
     } catch (error) {
-      console.error('Industry news error:', error);
+      console.error('Industry news fetch error:', error);
     }
     
-    // Fallback mock data
+    // Fallback industry news
     return [
-      { title: `${industry} Market Trends Q2 2025: Key Insights`, source: "TechCrunch", impact: "high" },
-      { title: `New Regulations Impact ${industry} Industry`, source: "Industry Weekly", impact: "medium" },
-      { title: `Innovation in ${focusArea}: What's Next`, source: "Business Insider", impact: "medium" }
+      { title: `${industry} Market Shows Strong Growth in Q2 2025`, source: "TechCrunch", impact: "high" },
+      { title: `New Regulations Impact ${industry} Innovation Landscape`, source: "Industry Weekly", impact: "medium" },
+      { title: `${focusArea} Technology Trends: What's Driving Change`, source: "Business Insider", impact: "medium" }
     ];
+  }
+
+  // Test connection to Google News
+  async testConnection() {
+    try {
+      const testQuery = 'technology news';
+      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(testQuery)}&hl=en-US&gl=US&ceid=US:en`;
+      const proxyUrl = this.getCurrentProxy() + encodeURIComponent(rssUrl);
+      
+      const response = await fetch(proxyUrl);
+      return {
+        success: response.ok,
+        status: response.status,
+        proxy: this.getCurrentProxy()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        proxy: this.getCurrentProxy()
+      };
+    }
   }
 }
 
