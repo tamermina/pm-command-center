@@ -1,6 +1,3 @@
-
-// Add this import at the top of your App.jsx
-import competitorService from './services/competitorService';
 import React, { useState, useEffect } from 'react';
 import { 
   Bell, 
