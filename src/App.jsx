@@ -19,6 +19,139 @@ import {
 // Add this import at the top of your App.jsx
 import competitorService from './services/competitorService';
 
+// Add this component to your App.jsx (after imports)
+
+const DebugPanel = ({ competitorService, competitorSetup }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [testResults, setTestResults] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const testConnection = async () => {
+    setIsLoading(true);
+    try {
+      const result = await competitorService.testConnection();
+      setTestResults(result);
+    } catch (error) {
+      setTestResults({
+        success: false,
+        error: error.message
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testSpecificCompetitor = async () => {
+    if (!competitorSetup.competitors[0]) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await competitorService.getCompetitorNews(
+        [competitorSetup.competitors[0]], 
+        competitorSetup.industry, 
+        competitorSetup.focusArea
+      );
+      setTestResults({
+        success: true,
+        competitorData: result
+      });
+    } catch (error) {
+      setTestResults({
+        success: false,
+        error: error.message
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-4 right-4 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-700 z-50"
+      >
+        Debug RSS
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 max-h-96 overflow-y-auto z-50">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-medium text-gray-900">RSS Debug Panel</h3>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        <button
+          onClick={testConnection}
+          disabled={isLoading}
+          className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+        >
+          {isLoading ? 'Testing...' : 'Test RSS Connection'}
+        </button>
+
+        {competitorSetup.competitors[0] && (
+          <button
+            onClick={testSpecificCompetitor}
+            disabled={isLoading}
+            className="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
+          >
+            Test "{competitorSetup.competitors[0]}"
+          </button>
+        )}
+
+        {testResults && (
+          <div className="bg-gray-50 p-3 rounded text-sm">
+            <div className={`font-medium ${testResults.success ? 'text-green-600' : 'text-red-600'}`}>
+              {testResults.success ? '✅ Success' : '❌ Failed'}
+            </div>
+            
+            {testResults.proxy && (
+              <div className="text-xs text-gray-600 mt-1">
+                Proxy: {testResults.proxy}
+              </div>
+            )}
+            
+            {testResults.error && (
+              <div className="text-xs text-red-600 mt-1">
+                Error: {testResults.error}
+              </div>
+            )}
+            
+            {testResults.competitorData && (
+              <div className="text-xs text-gray-600 mt-1">
+                Found {testResults.competitorData[0]?.updates?.length || 0} updates
+              </div>
+            )}
+            
+            {testResults.status && (
+              <div className="text-xs text-gray-600 mt-1">
+                HTTP Status: {testResults.status}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Add this to your main component return (before the closing </div>):
+{/* Debug Panel - only show in development */}
+{process.env.NODE_ENV === 'development' && (
+  <DebugPanel 
+    competitorService={competitorService} 
+    competitorSetup={competitorSetup} 
+  />
+)}
+
 const PMCommandCenter = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [briefingData, setBriefingData] = useState({
