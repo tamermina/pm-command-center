@@ -13,15 +13,11 @@ import {
   ChevronRight,
   Plus,
   Download,
-  Star,
-  Menu,
-  X
+  Star
 } from 'lucide-react';
 
 const PMCommandCenter = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
   const [briefingData, setBriefingData] = useState({
     marketNews: [
       { title: "AI Product Development Trends Q2 2025", source: "TechCrunch", impact: "high" },
@@ -38,7 +34,7 @@ const PMCommandCenter = () => {
       churn: { value: "2.1%", change: "-0.4%" }
     }
   });
-  
+
   const [documentationInput, setDocumentationInput] = useState('');
   const [generatedDoc, setGeneratedDoc] = useState('');
   const [requirementsInput, setRequirementsInput] = useState('');
@@ -227,145 +223,102 @@ Reach out to [contact] for support or feedback.`
 
   const [selectedFramework, setSelectedFramework] = useState('RICE Framework');
 
-  const tabs = [
-    { id: 'dashboard', label: 'Daily Briefing', icon: Bell, shortLabel: 'Briefing' },
-    { id: 'documentation', label: 'Smart Docs', icon: FileText, shortLabel: 'Docs' },
-    { id: 'requirements', label: 'Requirements Gen', icon: Lightbulb, shortLabel: 'Requirements' },
-    { id: 'decisions', label: 'Decision Support', icon: Brain, shortLabel: 'Decisions' },
-    { id: 'templates', label: 'Templates', icon: MessageSquare, shortLabel: 'Templates' }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
-                <Target className="text-indigo-600 w-6 h-6 sm:w-8 sm:h-8" />
-                <span className="truncate">PM Command Center</span>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <Target className="text-indigo-600" />
+                PM Command Center
               </h1>
-              <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base hidden sm:block">Your AI-powered product management assistant</p>
+              <p className="text-gray-600 mt-2">Your AI-powered product management assistant</p>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden md:flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden lg:inline">
-                  {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </span>
-                <span className="lg:hidden">
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Calendar className="w-4 h-4" />
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </div>
-              <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 cursor-pointer hover:text-gray-600" />
+              <Settings className="w-6 h-6 text-gray-400 cursor-pointer hover:text-gray-600" />
             </div>
           </div>
           
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex gap-1 mt-4 sm:mt-6 bg-gray-100 p-1 rounded-lg overflow-x-auto">
-            {tabs.map(tab => (
+          {/* Navigation */}
+          <div className="flex gap-1 mt-6 bg-gray-100 p-1 rounded-lg">
+            {[
+              { id: 'dashboard', label: 'Daily Briefing', icon: Bell },
+              { id: 'documentation', label: 'Smart Docs', icon: FileText },
+              { id: 'requirements', label: 'Requirements Gen', icon: Lightbulb },
+              { id: 'decisions', label: 'Decision Support', icon: Brain },
+              { id: 'templates', label: 'Templates', icon: MessageSquare }
+            ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                   activeTab === tab.id 
                     ? 'bg-white text-indigo-600 shadow-sm' 
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
-                <span className="hidden lg:inline">{tab.label}</span>
-                <span className="lg:hidden">{tab.shortLabel}</span>
+                {tab.label}
               </button>
             ))}
-          </div>
-
-          {/* Mobile Navigation */}
-          <div className="md:hidden mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-700">Current: {tabs.find(tab => tab.id === activeTab)?.label}</h3>
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-gray-600 hover:text-gray-900"
-              >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-            
-            {isMobileMenuOpen && (
-              <div className="bg-gray-100 rounded-lg p-2 space-y-1">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                      activeTab === tab.id 
-                        ? 'bg-white text-indigo-600 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Daily Briefing */}
         {activeTab === 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Key Metrics */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-600" />
                 Key Metrics
               </h3>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Daily Active Users</p>
-                    <p className="text-lg sm:text-2xl font-bold text-gray-900">{briefingData.metrics.dau.value}</p>
+                    <p className="text-sm text-gray-600">Daily Active Users</p>
+                    <p className="text-2xl font-bold text-gray-900">{briefingData.metrics.dau.value}</p>
                   </div>
-                  <span className="text-green-600 text-xs sm:text-sm font-medium">{briefingData.metrics.dau.change}</span>
+                  <span className="text-green-600 text-sm font-medium">{briefingData.metrics.dau.change}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Conversion Rate</p>
-                    <p className="text-lg sm:text-2xl font-bold text-gray-900">{briefingData.metrics.conversion.value}</p>
+                    <p className="text-sm text-gray-600">Conversion Rate</p>
+                    <p className="text-2xl font-bold text-gray-900">{briefingData.metrics.conversion.value}</p>
                   </div>
-                  <span className="text-blue-600 text-xs sm:text-sm font-medium">{briefingData.metrics.conversion.change}</span>
+                  <span className="text-blue-600 text-sm font-medium">{briefingData.metrics.conversion.change}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
                   <div>
-                    <p className="text-xs sm:text-sm text-gray-600">Churn Rate</p>
-                    <p className="text-lg sm:text-2xl font-bold text-gray-900">{briefingData.metrics.churn.value}</p>
+                    <p className="text-sm text-gray-600">Churn Rate</p>
+                    <p className="text-2xl font-bold text-gray-900">{briefingData.metrics.churn.value}</p>
                   </div>
-                  <span className="text-purple-600 text-xs sm:text-sm font-medium">{briefingData.metrics.churn.change}</span>
+                  <span className="text-purple-600 text-sm font-medium">{briefingData.metrics.churn.change}</span>
                 </div>
               </div>
             </div>
 
             {/* Market News */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Bell className="w-5 h-5 text-orange-600" />
                 Market Intelligence
               </h3>
               <div className="space-y-3">
                 {briefingData.marketNews.map((news, index) => (
                   <div key={index} className="p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2">{news.title}</h4>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 text-sm mb-1">{news.title}</h4>
                         <p className="text-xs text-gray-500">{news.source}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                      <span className={`px-2 py-1 rounded-full text-xs ${
                         news.impact === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                       }`}>
                         {news.impact}
@@ -377,20 +330,20 @@ Reach out to [contact] for support or feedback.`
             </div>
 
             {/* Competitor Updates */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-red-600" />
                 Competitor Intelligence
               </h3>
               <div className="space-y-3">
                 {briefingData.competitorUpdates.map((update, index) => (
                   <div key={index} className="p-3 border border-gray-200 rounded-lg">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 text-xs sm:text-sm">{update.company}</h4>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{update.update}</p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900 text-sm">{update.company}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{update.update}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                      <span className={`px-2 py-1 rounded-full text-xs ${
                         update.impact === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                       }`}>
                         {update.impact}
@@ -399,8 +352,8 @@ Reach out to [contact] for support or feedback.`
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-4 text-indigo-600 text-xs sm:text-sm font-medium hover:text-indigo-700 flex items-center justify-center gap-1">
-                View Full Analysis <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+              <button className="w-full mt-4 text-indigo-600 text-sm font-medium hover:text-indigo-700 flex items-center justify-center gap-1">
+                View Full Analysis <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -408,12 +361,12 @@ Reach out to [contact] for support or feedback.`
 
         {/* Smart Documentation */}
         {activeTab === 'documentation' && (
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-indigo-600" />
               Smart Documentation Generator
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Input (Meeting notes, rough ideas, stakeholder requests)
@@ -422,12 +375,12 @@ Reach out to [contact] for support or feedback.`
                   value={documentationInput}
                   onChange={(e) => setDocumentationInput(e.target.value)}
                   placeholder="Paste your meeting notes or describe your feature idea here..."
-                  className="w-full h-48 sm:h-64 p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 <button
                   onClick={generateDocumentation}
                   disabled={!documentationInput.trim()}
-                  className="mt-4 w-full sm:w-auto px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Brain className="w-4 h-4" />
                   Generate Polished Document
@@ -445,11 +398,11 @@ Reach out to [contact] for support or feedback.`
                     </button>
                   )}
                 </div>
-                <div className="h-48 sm:h-64 p-3 sm:p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
+                <div className="h-64 p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
                   {generatedDoc ? (
-                    <pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-800">{generatedDoc}</pre>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{generatedDoc}</pre>
                   ) : (
-                    <p className="text-gray-500 italic text-sm">Generated documentation will appear here...</p>
+                    <p className="text-gray-500 italic">Generated documentation will appear here...</p>
                   )}
                 </div>
               </div>
@@ -459,12 +412,12 @@ Reach out to [contact] for support or feedback.`
 
         {/* Requirements Generator */}
         {activeTab === 'requirements' && (
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <Lightbulb className="w-6 h-6 text-yellow-600" />
               AI-Powered Requirements Generator
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Feature Concept or Stakeholder Request
@@ -473,12 +426,12 @@ Reach out to [contact] for support or feedback.`
                   value={requirementsInput}
                   onChange={(e) => setRequirementsInput(e.target.value)}
                   placeholder="Describe the feature or functionality you want to build..."
-                  className="w-full h-24 sm:h-32 p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 <button
                   onClick={generateRequirements}
                   disabled={!requirementsInput.trim()}
-                  className="mt-4 w-full sm:w-auto px-4 sm:px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  className="mt-4 px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Star className="w-4 h-4" />
                   Generate User Stories & Acceptance Criteria
@@ -496,11 +449,11 @@ Reach out to [contact] for support or feedback.`
                     </button>
                   )}
                 </div>
-                <div className="h-64 sm:h-96 p-3 sm:p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
+                <div className="h-96 p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
                   {generatedRequirements ? (
-                    <pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-800">{generatedRequirements}</pre>
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800">{generatedRequirements}</pre>
                   ) : (
-                    <p className="text-gray-500 italic text-sm">Structured requirements will appear here...</p>
+                    <p className="text-gray-500 italic">Structured requirements will appear here...</p>
                   )}
                 </div>
               </div>
@@ -510,9 +463,9 @@ Reach out to [contact] for support or feedback.`
 
         {/* Decision Support */}
         {activeTab === 'decisions' && (
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <Brain className="w-6 h-6 text-purple-600" />
               Decision Support Framework
             </h3>
             
@@ -531,38 +484,38 @@ Reach out to [contact] for support or feedback.`
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">{name}</h4>
-                    <p className="text-xs sm:text-sm text-gray-600">{framework.description}</p>
+                    <h4 className="font-medium text-gray-900 mb-2">{name}</h4>
+                    <p className="text-sm text-gray-600">{framework.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-              <h4 className="font-medium text-gray-900 mb-4 text-sm sm:text-base">
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h4 className="font-medium text-gray-900 mb-4">
                 {selectedFramework} - Implementation Guide
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h5 className="text-sm font-medium text-gray-700 mb-3">Key Factors to Evaluate:</h5>
                   <ul className="space-y-2">
                     {prioritizationFrameworks[selectedFramework].factors.map((factor, index) => (
-                      <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-purple-600 rounded-full mt-1.5 flex-shrink-0"></div>
-                        <span>{factor}</span>
+                      <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                        {factor}
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
                   <h5 className="text-sm font-medium text-gray-700 mb-3">Calculation Method:</h5>
-                  <div className="p-3 bg-white rounded border text-xs sm:text-sm text-gray-700">
+                  <div className="p-3 bg-white rounded border text-sm text-gray-700">
                     {prioritizationFrameworks[selectedFramework].calculation}
                   </div>
                 </div>
               </div>
               
-              <button className="mt-6 w-full sm:w-auto px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 text-sm">
+              <button className="mt-6 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Start New Prioritization Exercise
               </button>
@@ -572,21 +525,21 @@ Reach out to [contact] for support or feedback.`
 
         {/* Communication Templates */}
         {activeTab === 'templates' && (
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <MessageSquare className="w-6 h-6 text-green-600" />
               Communication Templates
             </h3>
             
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div>
-                <h4 className="font-medium text-gray-900 mb-4 text-sm sm:text-base">Template Categories</h4>
+                <h4 className="font-medium text-gray-900 mb-4">Template Categories</h4>
                 <div className="space-y-2">
                   {Object.keys(communicationTemplates).map(template => (
                     <button
                       key={template}
                       onClick={() => setSelectedTemplate(template)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs sm:text-sm transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                         selectedTemplate === template
                           ? 'bg-green-100 text-green-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
@@ -600,14 +553,14 @@ Reach out to [contact] for support or feedback.`
               
               <div className="lg:col-span-3">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium text-gray-900 text-sm sm:text-base">{selectedTemplate}</h4>
-                  <button className="text-green-600 text-xs sm:text-sm hover:text-green-700 flex items-center gap-1">
+                  <h4 className="font-medium text-gray-900">{selectedTemplate}</h4>
+                  <button className="text-green-600 text-sm hover:text-green-700 flex items-center gap-1">
                     <Download className="w-4 h-4" />
                     Copy Template
                   </button>
                 </div>
-                <div className="h-64 sm:h-96 p-3 sm:p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-800">
+                <div className="h-96 p-4 border border-gray-300 rounded-lg bg-gray-50 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-800">
                     {communicationTemplates[selectedTemplate]}
                   </pre>
                 </div>
